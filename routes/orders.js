@@ -97,6 +97,8 @@ router.post("/", async (req, res) => {
     products.push(obj);
   })
 
+  console.log("Hello");
+  console.log(products);
 
   try {
     const order = new OrdersSchema({
