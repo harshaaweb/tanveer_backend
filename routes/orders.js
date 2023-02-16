@@ -111,7 +111,7 @@ router.post("/", async (req, res) => {
 
     await Cart.deleteMany({ user_id: userid });
 
-    res
+    return res
       .status(201)
       .json({ message: "Order created successfully", status: "success" });
   } catch (error) {
