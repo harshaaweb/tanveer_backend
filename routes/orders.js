@@ -122,7 +122,12 @@ router.post("/", async (req, res) => {
 //code to get a order by id
 router.get("/:id", async (req, res) => {
   try {
-    const order = await OrdersSchema.findById(req.params.id);
+    const order = await OrdersSchema.findById(req.params.id)
+    .populate([
+      {
+        path: "products.product_id",
+      }
+    ])
     res.status(200).json(order);
   } catch (error) {
     res.status(500).json({ message: error.message, status: "error" });
