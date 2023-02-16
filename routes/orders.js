@@ -97,7 +97,7 @@ router.post("/", async (req, res) => {
     products.push(obj);
   })
 
-  console.log("Hello");
+  // console.log("Hello");
   console.log(products);
 
   try {
