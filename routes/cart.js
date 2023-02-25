@@ -16,22 +16,20 @@ router.post("/", getAuthUser, async (req, res) => {
     const cart = await CartSchema.findOne({
       user_id: user._id,
       product_id: product_id,
-    }).populate([
-      {
-        path: "product_id",
-        select: "seller_id",
-      }
-    ])
+    });
 
     if (cart) {
       return res.status(400).json({ message: "Product already in cart" });
     }
 
+    const product = await ProductSchema.findById(product_id);
+    // console.log(product);
+
     const newcart = new CartSchema({
-      user_id: decoded.id,
+      user_id: user._id,
       product_id: req.body.product_id,
       quantity: req.body.quantity,
-      seller_id: cart.product_id.seller_id
+      seller_id: product.seller_id
     });
 
     await newcart.save();
@@ -52,13 +50,13 @@ router.get("/my", getAuthUser, async (req, res) => {
     let cart;
 
     if (user.role === "admin") {
-      cart = await CartSchema.find({ seller_id: decoded._id }).populate([{ path: "product_id" }]);
+      cart = await CartSchema.find({ seller_id: user._id }).populate([{ path: "product_id" }]);
     }
     else if (user.role === "seller") {
-      cart = await CartSchema.find({ seller_id: decoded._id }).populate([{ path: "product_id" }]);
+      cart = await CartSchema.find({ seller_id: user._id }).populate([{ path: "product_id" }]);
     }
     else {
-      cart = await CartSchema.find({ user_id: decoded._id }).populate([{ path: "product_id" }]);
+      cart = await CartSchema.find({ user_id: user._id }).populate([{ path: "product_id" }]);
     }
 
 

@@ -91,7 +91,7 @@ router.post("/", getAuthUser, async (req, res) => {
 
   try {
     const order = new OrdersSchema({
-      user_id: decoded._id,
+      user_id: user._id,
       address_id: req.body.address_id,
       seller_id: all_cart[0].product_id.seller_id,
       products: products,

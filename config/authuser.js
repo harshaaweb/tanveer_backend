@@ -15,7 +15,7 @@ async function getAuthUser(req, res, next){
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        const user = await User.findOne({ _id: decoded.id })
+        const user = await User.findById(decoded.id)
         if(!user){
             return res.status(401).json({ message: "Unauthorized" });
         }
