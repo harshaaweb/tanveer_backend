@@ -4,11 +4,20 @@ const ProductSchema = require("../models/product_schema");
 const CartSchema = require("../models/cart_schema");
 const jwt = require("jsonwebtoken");
 const upload = require("../config/image_upload");
+const { getAuthUser } = require("../config/authuser");
 require("dotenv").config();
 
 // route to post a product with image upload--------------
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", upload.single("image"), getAuthUser, async (req, res) => {
   try {
+    const user = req.user;
+    if (user.role !== "seller") {
+      return res.status(401).json({
+        message: "Unauthorized",
+        status: "error",
+      });
+    }
+
     const url = req.protocol + "://" + req.get("host");
     const add_product = new ProductSchema({
       title: req.body.title,
@@ -16,7 +25,8 @@ router.post("/", upload.single("image"), async (req, res) => {
       image: url + "/medias/" + req.file.filename,
       price: req.body.price,
       category_id: req.body.category_id,
-      shopId: req.body.shopId
+      shopId: req.body.shopId,
+      seller_id: user._id,
     });
     await add_product.save();
     res.status(200).json({
@@ -30,15 +40,6 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
-// code to get single product by id
-router.get("/:id", async (req, res) => {
-  try {
-    const get_product = await ProductSchema.findById(req.params.id).lean();
-    res.status(200).json(get_product);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
 
 //get all podcucts by shop id
 router.get("/shop/:shopid", async (req, res) => {
@@ -55,6 +56,23 @@ router.get("/", async (req, res) => {
   try {
     const get_all_products = await ProductSchema.find().lean();
     res.status(200).json(get_all_products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//Get all product_detail
+router.get("/my",getAuthUser, async (req, res) => {
+  try {
+    let products = [];
+    const user = req.user;
+    if (user.role === "seller") {
+      products = await ProductSchema.find({seller_id: user._id}).lean();
+    } else if (user.role === "admin") {
+      products = await ProductSchema.find().lean();
+    }
+    
+    res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -112,6 +130,18 @@ router.put("/update/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// code to get single product by id
+router.get("/:id", async (req, res) => {
+  try {
+    const get_product = await ProductSchema.findById(req.params.id).lean();
+    res.status(200).json(get_product);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
 
 //Delete One order_detail
 router.delete("/:id", async (req, res) => {

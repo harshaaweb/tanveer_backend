@@ -2,32 +2,19 @@ const express = require("express");
 const router = express.Router();
 const UsersSchema = require("./../models/users_schema");
 const JWT = require("jsonwebtoken");
-const upload = require('../config/image_upload')
+const upload = require('../config/image_upload');
+const { getAuthUser } = require("../config/authuser");
 require("dotenv").config();
 
 
 // code to get user profile
-router.get("/", async (req, res) => {
-  let token = req.cookies.token || req.headers["token"] || req.headers["x-auth-token"];
+router.get("/", getAuthUser, async (req, res) => {
   try {
-    if (!token) {
-      return res.status(400).json({ message: "Please provide a token.", status: "warning" })
-    }
-    const have_valid_token = JWT.verify(token, process.env.JWT_SECRET);
-    if (!have_valid_token) {
-      return res.status(400).json({
-        message: "Anauthorized",
-        status: "warning"
-      })
-    }
-    const id_from_token = have_valid_token.id;
-
-    const user_data = await UsersSchema.findById(id_from_token);
-
+    const user = req.user;
     return res.json({
       message: "Profile found",
       status: "success",
-      data: user_data,
+      data: user,
       // token: token,
     });
 
@@ -37,22 +24,11 @@ router.get("/", async (req, res) => {
 });
 
 // code to get user profile
-router.patch("/", async (req, res) => {
-  let token = req.cookies.token || req.headers["token"] || req.headers["x-auth-token"];
+router.patch("/", getAuthUser, async (req, res) => {
   try {
-    if (!token) {
-      return res.status(400).json({ message: "Please provide a token.", status: "warning" })
-    }
-    const have_valid_token = JWT.verify(token, process.env.JWT_SECRET);
-    if (!have_valid_token) {
-      return res.status(400).json({
-        message: "Anauthorized",
-        status: "warning"
-      })
-    }
-    const id_from_token = have_valid_token.id;
+    const user = req.user;
 
-    const user_data = await UsersSchema.findByIdAndUpdate(id_from_token, {
+    const user_data = await UsersSchema.findByIdAndUpdate(user._id, {
       ...req.body
     });
 
@@ -68,24 +44,16 @@ router.patch("/", async (req, res) => {
 });
 
 // route to check user is login or not
-router.get("/check", async (req, res) => {
+router.get("/check",getAuthUser, async (req, res) => {
   try {
-    let token = req.cookies.token || req.headers["token"];
+    const user = req.user;
+    
+    res.json({
+      message: "You are login & you have token",
+      status: "success",
+      data: user,
+    })
 
-    if (token != undefined || token != null || token != "") {
-      const have_valid_token = JWT.verify(token, process.env.JWT_SECRET);
-      const id_from_token = have_valid_token.id;
-
-      const user_data = await UsersSchema.findById(id_from_token);
-      res.json({
-        message: "You are login & you have token",
-        status: "success",
-        // data: user_data,
-        token: token,
-      });
-    } else {
-      res.json({ message: "You are not login , ", status: "warning" });
-    }
   } catch (error) {
     res.status(500).json({ message: error.message, status: "error" });
   }
@@ -97,7 +65,7 @@ router.post("/image", upload.single('image'), async (req, res) => {
   try {
     let url = req.protocol + "://" + req.get("host") + "/" + req.file.filename;
 
-    res.json({
+    res.status(200).json({
       message: "Image uploaded",
       status: "success",
       data: url,

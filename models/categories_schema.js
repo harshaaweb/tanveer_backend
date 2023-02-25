@@ -18,5 +18,9 @@ const CategoriesSchema = mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    added_by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "users",
+    }
 });
 module.exports = mongoose.model("categories", CategoriesSchema);

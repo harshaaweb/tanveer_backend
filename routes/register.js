@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const UsersSchema = require("./../models/users_schema");
 const bcrypt = require("bcryptjs");
+const Shop = require("../models/shop_schema");
 
 router.get("/", (req, res) => {
   res.json({
@@ -27,13 +28,31 @@ router.post("/", validateRegister, async (req, res) => {
     username: req.body.username || random_username,
     password: hashed_password,
     dob: "01/01/2000",
-    role: req.body.role,
-    address: "Not provided",
+    role: req.body.role || "user",
+    address: req.body.address || "Not provided",
   });
+
+  let shop = {};
+  if(req.body.role === "seller"){
+    shop = new Shop({
+      name: req.body.shop_name,
+      email: req.body.shop_email,
+      phone: req.body.shop_phone,
+      address: req.body.shop_address,
+      description: req.body.shop_description,
+      image: req.body.shop_image || "",
+      seller_id: save_user._id,
+    });
+    await shop.save();
+  }
+
+
   try {
     await save_user.save();
     res.status(200).json({
       message: "User created successfully",
+      user: save_user,
+      shop: shop,
     });
   } catch (error) {
     res.status(400).json({ message: error.message, status: "error" });

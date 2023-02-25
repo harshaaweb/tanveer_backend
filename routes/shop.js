@@ -1,13 +1,35 @@
 const router = require('express').Router();
 const Shop = require('../models/shop_schema')
 const upload = require('../config/image_upload')
-
+const {getAuthUser} = require("../config/authuser")
 // get all shops 
 router.get('/', async (req, res) => {
     try {
         const allShops = await Shop.find();
         
         return res.json({message: "Shops found", shops: allShops, status: "success"})
+    } catch (error) {
+        return res.json({message: error.message, status: "error"})
+    }
+})
+
+// get all shops 
+router.get('/my',getAuthUser,  async (req, res) => {
+    try {
+        const user = req.user;
+        let shop = null;
+        if(user.role === "admin"){
+            shop = await Shop.findOne({});
+        }
+        else if(user.role === "seller"){
+            shop = await Shop.find({
+                seller_id: user._id
+            });
+        }else{
+            shop = [];
+        }
+        
+        return res.json({message: "Shops found", shops: shop, status: "success"})
     } catch (error) {
         return res.json({message: error.message, status: "error"})
     }

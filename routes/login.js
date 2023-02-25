@@ -69,11 +69,10 @@ router.post("/sellerlogin", async (req, res) => {
     const hashpass = user.password;
     if (!bcrypt.compareSync(password, hashpass))
       return res
-
         .status(400)
         .json({ message: "User and password is wrong.", status: "warning" });
-    const token = jwt.sign(
-      {
+
+    const token = jwt.sign({
         id: user._id,
         username: user.username,
         email: user.email,

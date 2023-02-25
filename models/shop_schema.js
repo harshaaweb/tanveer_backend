@@ -15,7 +15,7 @@ const shopSchema = new Schema({
     },
     image: {
         type: String, 
-        required: true
+        required: true,
     },
     address: {
         type: String,
@@ -30,8 +30,13 @@ const shopSchema = new Schema({
         type: Date,
         required: true,
         default: Date.now,
-    }
-    
+    },
+    seller_id: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+
 }, {
     timestamps: true,
 })

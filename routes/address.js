@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const AddressSchema = require("./../models/address_schema");
 const jwt = require("jsonwebtoken");
+const { getAuthUser } = require("../config/authuser");
 require("dotenv").config();
 
 //Get all address
@@ -15,18 +16,10 @@ router.get("/", async (req, res) => {
 });
 
 //Get my address
-router.get("/my", async (req, res) => {
-    //Check user have token or not
-    const token = req.cookies.auth_token || req.body.token || req.headers["x-auth-token"];
-
-    if (token === undefined || token === null || token === "") {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+router.get("/my",getAuthUser, async (req, res) => {
     try {
-        const address = await AddressSchema.find({ user_id: decoded.id }).lean();
+        const user = req.user;
+        const address = await AddressSchema.find({ user_id: user._id }).lean();
         res.status(200).json(address);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -34,19 +27,12 @@ router.get("/my", async (req, res) => {
 });
 
 //Create address
-router.post("/", async (req, res) => {
-    //Check user have token or not
-    const token = req.cookies.auth_token || req.body.token || req.headers["x-auth-token"];
-
-    if (token === undefined || token === null || token === "") {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+router.post("/",getAuthUser, async (req, res) => {
+    const user = req.user;
 
     try {
         const address = new AddressSchema({
-            user_id: decoded.id,
+            user_id: user._id,
             label: req.body.label,
             address_line_1: req.body.address_line_1,
             address_line_2: req.body.address_line_2,

@@ -1,4 +1,5 @@
 const express = require("express");
+const { getAuthUser } = require("../config/authuser");
 const upload = require("../config/image_upload");
 const router = express.Router();
 const CategoriesSchema = require("./../models/categories_schema");
@@ -7,6 +8,25 @@ router.get("/", async (req, res) => {
   try {
     const categories = await CategoriesSchema.find().lean();
     res.status(200).json(categories);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//Get all categories
+router.get("/my",getAuthUser, async (req, res) => {
+  try {
+    const user = req.user;
+    let cats = [];
+    if (user.role === "seller") {
+      cats = await CategoriesSchema.find({ added_by: user._id }).lean();
+    } else if(user.role === "admin"){
+      cats = await CategoriesSchema.find().lean();
+    }else{
+      cats = [];
+    }
+    
+    return res.status(200).json(cats);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -28,15 +48,19 @@ router.get("/:id", async (req, res) => {
 });
 
 // route to post category with image upload
-router.post("/", upload.single("image"), async (req, res) => {
-  const url = req.protocol + "://" + req.get("host");
-  console.log(req.body);
+router.post("/", upload.single("image"),getAuthUser, async (req, res) => {
   try {
+    const user = req.user;
+    if (user.role === "user") {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const url = req.protocol + "://" + req.get("host");
     const category = new CategoriesSchema({
       name: req.body.name,
       description: req.body.description,
       image: url + "/" + req.file.filename,
+      added_by: user._id,
     });
     await category.save();
     res
@@ -46,6 +70,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     res.status(500).json({ message: error.message, status: "error" });
   }
 });
+
 //Update One
 router.patch("/:id", async (req, res) => {
   try {

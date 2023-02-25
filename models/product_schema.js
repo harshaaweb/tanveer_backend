@@ -23,6 +23,11 @@ const ProductsSchema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  seller_id: {
+    type: mongoose.Types.ObjectId,
+    required: true,
+    ref: "User"
+  },
   shopId: {
     type: mongoose.Types.ObjectId,
     required: true,
