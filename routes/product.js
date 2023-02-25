@@ -22,7 +22,7 @@ router.post("/", upload.single("image"), getAuthUser, async (req, res) => {
     const add_product = new ProductSchema({
       title: req.body.title,
       description: req.body.description,
-      image: url + "/medias/" + req.file.filename,
+      image: url + "/" + req.file.filename,
       price: req.body.price,
       category_id: req.body.category_id,
       shopId: req.body.shopId,
